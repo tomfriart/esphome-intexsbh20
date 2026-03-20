@@ -8,22 +8,7 @@
  *
  * Copyright (C) 2021 Jens B.
  *
- *
- * Receive data handling based on code from:
- *
- * DIYSCIP <https://github.com/yorffoeg/diyscip> (c) by Geoffroy HUBERT - yorffoeg@gmail.com
- *
- * DIYSCIP is licensed under a
- * Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
- *
- * You should have received a copy of the license along with this
- * work. If not, see <https://creativecommons.org/licenses/by-nc-sa/4.0/>.
- *
- * DIYSCIP is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY.
- *
  * SPDX-License-Identifier: CC-BY-NC-SA-4.0
- *
  */
 
 #ifndef SBH20IO_H
@@ -32,99 +17,6 @@
 #include <WString.h>
 #include <Arduino.h>
 #include "common.h"
-
-/**
- * The Intex serial protocol between the mainboard of the SB-H20 model and its
- * control panel uses a 16-bit data frame where each bit is sampled by the
- * rising clock signal and the frame is sampled by the rising slave select
- * signal, similar to SPI mode 3 but unidirectional. The clock speed is 100 kHz,
- * the data bits are inverted and the bit order is big endian (MSB).
- *
- * There are 4 telegram types, one for the 7-segment display, one for the LEDs,
- * one for the buttons and the cue telegram that is send each time the telegram
- * type changes. Only the button telegram is used for sending commands to the
- * SB-H20. All other telegrams are receive telegrams.
- *
- * To signal when a button is pressed the data line must be pulled low for
- * 2 microseconds after the slave select signal turns high if a switch telegram
- * has been received that matches the button function.
- *
- *        |-------------------------------------------------------------------------------|
- * BIT    | 15 | 14 | 13 | 12 | 11 | 10 |  9 |  8 |  7 |  6 |  5 |  4 |  3 |  2 |  1 |  0 |
- *        |-------------------------------------------------------------------------------|
- * CUE    |  0 |  0 |  0 |  0 |  0 |  0 |  0 |  1 |  0 |  0 |  0 |  0 |  0 |  0 |  0 |  0 |
- * DIGIT  | DP |  x |  A |  B | S3 |  D |  C |  x |  E | S1 | S2 |  G |  F | S4 |  x |  x |
- * LED    |  0 |  1 |  0 |  x |  0 |  x |  x |  x |  x |  0 |  0 |  0 |  0 |  0 |  0 |  x |
- * BUTTON |  x |  0 |  x |  x |  0 |  x |  0 |  1 |  0 |  0 |  0 |  0 |  x |  0 |  0 |  0 |
- *        |-------------------------------------------------------------------------------|
- *
- * display:
- *
- * bits S1, S2, S3 and S4 each select a 7-segment display, digits are from left to right
- *
- * DP .    A
- *       -----
- *      |     |
- *    F |     | B
- *      |     |
- *       --G--
- *      |     |
- *    E |     | C
- *      |     |
- *       -----
- *         D
- *
- * telegram order:
- *
- * 32 frames, repeating every 21 ms (5x digit 1-4, 5x LEDs, 1x buttons 1-7)
- *
- * CD1
- * CD2
- * CD3
- * CD4
- * CL
- * CD1
- * CD2
- * CD3
- * CD4
- * CL
- * CD1
- * CD2
- * CD3
- * CD4
- * CL
- * CD1
- * CD2
- * CD3
- * CD4
- * CL
- * CD1
- * CD2
- * CD3
- * CD4
- * CBBBBBBBL
- *
- *
- * Build Notes:
- *
- * The define of Arduino Core for ESP8266 named "DEBUG_ESP_PORT" must not be
- * enabled because core debugging will reduce the performance so much that stable
- * decoding of the 100 kHz clock is not possible. Instead use selective
- * Serial.printf() where needed.
- *
- * Any extended operation and especially serial debugging in an ISR might cause
- * a crash.
- *
- * Using member variables or calling member function from ISR slows down
- * execution causing the button operations to become unreliable or fail.
- *
- * The code is near the upper limit for using IRAM for VTables. Some
- * modifications may cause the linker to fail. You could change the VTables
- * settings to "Flash" but that will make the code run a little bit slower and
- * the button operations will become unreliable or fail. Avoiding plain members
- * and using structs or classes instead helps saving VTable space.
- *
- */
 
 class SBH20IO
 {
@@ -139,12 +31,12 @@ public:
   class WATER_TEMP
   {
   public:
-    static const int SET_MIN = 20; // °C
-    static const int SET_MAX = 40; // °C
+    static const int SET_MIN = 20;
+    static const int SET_MAX = 40;
   };
 
 public:
-  void setup(LANG language);
+  void setup(LANG language, uint8_t data_pin, uint8_t clock_pin, uint8_t latch_pin);
   void loop();
 
 public:
@@ -176,37 +68,42 @@ public:
   unsigned int getTotalFrames() const;
   unsigned int getDroppedFrames() const;
 
+  // pin accessors needed by ISRs via arg pointer
+  uint8_t get_data_pin() const { return pin_data_; }
+  uint8_t get_clock_pin() const { return pin_clock_; }
+  uint8_t get_latch_pin() const { return pin_latch_; }
+
 private:
   class CYCLE
   {
   public:
-    static const unsigned int TOTAL_FRAMES = 32;                    // number of frames in each cycle
-    static const unsigned int DISPLAY_FRAMES = 5;                   // number of digit frame groups in each cycle
-    static const unsigned int PERIOD = 21;                          // ms, period of frame cycle
-    static const unsigned int RECEIVE_TIMEOUT = 50 * CYCLE::PERIOD; // ms
+    static const unsigned int TOTAL_FRAMES = 32;
+    static const unsigned int DISPLAY_FRAMES = 5;
+    static const unsigned int PERIOD = 21;
+    static const unsigned int RECEIVE_TIMEOUT = 50 * CYCLE::PERIOD;
   };
 
   class FRAME
   {
   public:
     static const unsigned int BITS = 16;
-    static const unsigned int FREQUENCY = CYCLE::TOTAL_FRAMES / CYCLE::PERIOD; // frames/ms
+    static const unsigned int FREQUENCY = CYCLE::TOTAL_FRAMES / CYCLE::PERIOD;
   };
 
   class BLINK
   {
   public:
-    static const unsigned int PERIOD = 500;                                   // ms, temp will blink 8 times in 4000 ms
-    static const unsigned int TEMP_FRAMES = PERIOD / 4 * FRAME::FREQUENCY;    // sample duration of desired temp after blank display
-    static const unsigned int STOPPED_FRAMES = 2 * PERIOD * FRAME::FREQUENCY; // must be longer than single blink duration
+    static const unsigned int PERIOD = 500;
+    static const unsigned int TEMP_FRAMES = PERIOD / 4 * FRAME::FREQUENCY;
+    static const unsigned int STOPPED_FRAMES = 2 * PERIOD * FRAME::FREQUENCY;
   };
 
   class BUTTON
   {
   public:
-    static const unsigned int PRESS_COUNT = BLINK::PERIOD / CYCLE::PERIOD - 2; // must be long enough to trigger, but short enough to avoid double trigger
-    static const unsigned int ACK_CHECK_PERIOD = 10;                           // ms
-    static const unsigned int ACK_TIMEOUT = 2 * PRESS_COUNT * CYCLE::PERIOD;   // ms
+    static const unsigned int PRESS_COUNT = BLINK::PERIOD / CYCLE::PERIOD - 2;
+    static const unsigned int ACK_CHECK_PERIOD = 10;
+    static const unsigned int ACK_TIMEOUT = 2 * PRESS_COUNT * CYCLE::PERIOD;
   };
 
 private:
@@ -218,48 +115,4 @@ private:
 
     bool buzzer = false;
     uint16_t error = 0;
-    unsigned int lastErrorChangeFrameCounter = 0;
-
-    bool online = true;
-    bool stateUpdated = false;
-
-    unsigned int frameCounter = 0;
-    unsigned int frameDropped = 0;
-  };
-
-  struct Buttons
-  {
-    unsigned int toggleBubble = 0;
-    unsigned int toggleFilter = 0;
-    unsigned int toggleHeater = 0;
-    unsigned int togglePower = 0;
-    unsigned int toggleTempUp = 0;
-    unsigned int toggleTempDown = 0;
-  };
-
-private:
-  // ISR and ISR helper
-  static void IRAM_ATTR latchFallingISR(void *arg);
-  static void IRAM_ATTR clockRisingISR(void *arg);
-  static inline uint8_t IRAM_ATTR BCD(uint16_t value);
-  static inline void IRAM_ATTR decodeDisplay(uint16_t frame);
-  static inline void IRAM_ATTR decodeLED(uint16_t frame);
-  static inline void IRAM_ATTR decodeButton(uint16_t frame);
-
-private:
-  // ISR variables
-  static volatile State state;
-  static volatile Buttons buttons;
-
-private:
-  uint16_t convertDisplayToCelsius(uint16_t value) const;
-  bool waitBuzzerOff() const;
-  bool pressButton(volatile unsigned int &buttonPressCount);
-  bool changeTargetTemperature(int up);
-
-private:
-  LANG language;
-  unsigned long lastStateUpdateTime = 0;
-};
-
-#endif /* SBH20IO_H */
+    unsigned int lastErrorChang
