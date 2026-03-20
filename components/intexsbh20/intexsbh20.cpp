@@ -7,13 +7,13 @@ namespace sbh20 {
 
 void IntexSBH20::setup()
 {
-	data_pin_->setup();
-    clock_pin_->setup();
-    enable_pin_->setup();
-    // pass pin numbers to SBH20IO
-    sbh20io_.setup(data_pin_->get_pin(), clock_pin_->get_pin(), enable_pin_->get_pin());
-	sbh_.setup(LANG::EN);
+  data_pin_->setup();
+  clock_pin_->setup();
+  enable_pin_->setup();
+  sbh_.setup(LANG::EN, data_pin_->get_pin(), clock_pin_->get_pin(), enable_pin_->get_pin());
 }
+
+// ... rest of the file unchanged
 
 void IntexSBH20::loop()
 {
