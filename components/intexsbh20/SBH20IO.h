@@ -1,16 +1,3 @@
-/*
- * project:  Intex PureSpa SB-H20 WiFi Controller
- *
- * file:     SBH20IO.h
- *
- * encoding: UTF-8
- * created:  14th March 2021
- *
- * Copyright (C) 2021 Jens B.
- *
- * SPDX-License-Identifier: CC-BY-NC-SA-4.0
- */
-
 #ifndef SBH20IO_H
 #define SBH20IO_H
 
@@ -68,7 +55,6 @@ public:
   unsigned int getTotalFrames() const;
   unsigned int getDroppedFrames() const;
 
-  // pin accessors needed by ISRs via arg pointer
   uint8_t get_data_pin() const { return pin_data_; }
   uint8_t get_clock_pin() const { return pin_clock_; }
   uint8_t get_latch_pin() const { return pin_latch_; }
@@ -112,7 +98,49 @@ private:
     uint16_t currentTemperature = UNDEF::USHORT;
     uint16_t targetTemperature = UNDEF::USHORT;
     uint16_t ledStatus = UNDEF::USHORT;
-
     bool buzzer = false;
     uint16_t error = 0;
-    unsigned int lastErrorChang
+    unsigned int lastErrorChangeFrameCounter = 0;
+    bool online = true;
+    bool stateUpdated = false;
+    unsigned int frameCounter = 0;
+    unsigned int frameDropped = 0;
+  };
+
+  struct Buttons
+  {
+    unsigned int toggleBubble = 0;
+    unsigned int toggleFilter = 0;
+    unsigned int toggleHeater = 0;
+    unsigned int togglePower = 0;
+    unsigned int toggleTempUp = 0;
+    unsigned int toggleTempDown = 0;
+  };
+
+private:
+  static void IRAM_ATTR latchFallingISR(void *arg);
+  static void IRAM_ATTR clockRisingISR(void *arg);
+  static inline uint8_t IRAM_ATTR BCD(uint16_t value);
+  static inline void IRAM_ATTR decodeDisplay(uint16_t frame);
+  static inline void IRAM_ATTR decodeLED(uint16_t frame);
+  static inline void IRAM_ATTR decodeButton(uint16_t frame);
+
+private:
+  static volatile State state;
+  static volatile Buttons buttons;
+
+private:
+  uint16_t convertDisplayToCelsius(uint16_t value) const;
+  bool waitBuzzerOff() const;
+  bool pressButton(volatile unsigned int &buttonPressCount);
+  bool changeTargetTemperature(int up);
+
+private:
+  LANG language;
+  uint8_t pin_data_;
+  uint8_t pin_clock_;
+  uint8_t pin_latch_;
+  unsigned long lastStateUpdateTime = 0;
+};
+
+#endif /* SBH20IO_H */
