@@ -29,9 +29,12 @@ public:
   void set_error_text_sensor(esphome::text_sensor::TextSensor* error) { error_text_ = error; }
   void set_water_temperature_sensor(esphome::sensor::Sensor* temperature) { water_temperature_ = temperature; }
 
-  void set_data_pin(GPIOPin *pin) { data_pin_ = pin; }
-  void set_clock_pin(GPIOPin *pin) { clock_pin_ = pin; }
-  void set_enable_pin(GPIOPin *pin) { enable_pin_ = pin; }
+  //void set_data_pin(GPIOPin *pin) { data_pin_ = pin; }
+  //void set_clock_pin(GPIOPin *pin) { clock_pin_ = pin; }
+  //void set_enable_pin(GPIOPin *pin) { enable_pin_ = pin; }
+  void set_data_pin(InternalGPIOPin *pin) { data_pin_ = pin; }
+  void set_clock_pin(InternalGPIOPin *pin) { clock_pin_ = pin; }
+  void set_enable_pin(InternalGPIOPin *pin) { enable_pin_ = pin; }
 
 protected:
   //GPIOPin *data_pin_{nullptr};
