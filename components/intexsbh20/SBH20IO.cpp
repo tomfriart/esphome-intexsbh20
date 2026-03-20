@@ -412,7 +412,10 @@ inline void IRAM_ATTR SBH20IO::decodeDisplay(uint16_t frame)
   }
 }
 
-
+void IRAM_ATTR SBH20IO::decodeLED(uint16_t data) {
+    // This is a stub to satisfy the linker. 
+    // You can add LED logic here later.
+}
 
 inline void IRAM_ATTR SBH20IO::decodeButton(uint16_t frame)
 {
