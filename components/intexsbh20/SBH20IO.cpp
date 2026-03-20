@@ -13,6 +13,9 @@
 
 #include "SBH20IO.h"
 
+static uint8_t s_data_pin = 0;
+static uint8_t s_latch_pin = 0;
+
 namespace FRAME_LED
 {
   const uint16_t POWER = 0x0001;
@@ -166,6 +169,8 @@ void SBH20IO::setup(LANG language, uint8_t data_pin, uint8_t clock_pin, uint8_t 
   pinMode(pin_data_, INPUT);
   pinMode(pin_latch_, INPUT);
 
+  s_data_pin = data_pin;
+  s_latch_pin = latch_pin;
   attachInterruptArg(digitalPinToInterrupt(pin_latch_), SBH20IO::latchFallingISR, this, FALLING);
   attachInterruptArg(digitalPinToInterrupt(pin_clock_), SBH20IO::clockRisingISR, this, RISING);
 }
