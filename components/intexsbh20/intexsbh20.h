@@ -34,9 +34,12 @@ public:
   void set_enable_pin(GPIOPin *pin) { enable_pin_ = pin; }
 
 protected:
-  GPIOPin *data_pin_{nullptr};
-  GPIOPin *clock_pin_{nullptr};
-  GPIOPin *enable_pin_{nullptr};
+  //GPIOPin *data_pin_{nullptr};
+  //GPIOPin *clock_pin_{nullptr};
+  //GPIOPin *enable_pin_{nullptr};
+  InternalGPIOPin *data_pin_;
+  InternalGPIOPin *clock_pin_;
+  InternalGPIOPin *enable_pin_;
 
 private:
   SBH20IO sbh_;
