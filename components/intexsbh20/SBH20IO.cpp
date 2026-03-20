@@ -377,12 +377,12 @@ inline uint8_t IRAM_ATTR SBH20IO::BCD(uint16_t value)
   }
 }
 
-inline void IRAM_ATTR SBH20IO::decodeDisplay(uint16_t frame)
-{
+// 1. Remove 'inline', keep 'IRAM_ATTR'
+void IRAM_ATTR SBH20IO::decodeDisplay(uint16_t frame) {
   static uint16_t value = 0;
   static uint16_t pValue = 0;
   static uint16_t stableValue = 0;
-  static uint debounce = 0;
+  static uint32_t debounce = 0; // Use standard types
   static uint8_t largeDebounce = 0;
   static uint16_t stableTemp = 0x0000;
 
@@ -391,18 +391,17 @@ inline void IRAM_ATTR SBH20IO::decodeDisplay(uint16_t frame)
   if (frame & FRAME_DIGIT::POS_1) value = (value & 0x0FFF) | (digit << 12);
   else if (frame & FRAME_DIGIT::POS_2) value = (value & 0xF0FF) | (digit << 8);
   else if (frame & FRAME_DIGIT::POS_3) value = (value & 0xFF0F) | (digit << 4);
-  else if (frame & FRAME_DIGIT::POS_4)
-  {
+  else if (frame & FRAME_DIGIT::POS_4) {
     value = (value & 0xFFF0) | digit;
     if (value != pValue) { pValue = value; debounce = 3; }
-    else
-    {
+    else {
       if (debounce) debounce--;
-      else if (value != stableValue)
-      {
+      else if (value != stableValue) {
         largeDebounce = 250;
         stableValue = value;
-        if (displayIsBlank(value)) { if (state.targetTemperature != stableTemp) { state.targetTemperature = stableTemp; state.stateUpdated = true; } }
+        if (displayIsBlank(value)) { 
+           if (state.targetTemperature != stableTemp) { state.targetTemperature = stableTemp; state.stateUpdated = true; } 
+        }
         else if (displayIsError(value)) state.error = display2Error(value);
         else stableTemp = stableValue;
       }
@@ -413,12 +412,11 @@ inline void IRAM_ATTR SBH20IO::decodeDisplay(uint16_t frame)
 }
 
 void IRAM_ATTR SBH20IO::decodeLED(uint16_t data) {
-    // This is a stub to satisfy the linker. 
-    // You can add LED logic here later.
+    // Stub
 }
 
-inline void IRAM_ATTR SBH20IO::decodeButton(uint16_t frame)
-{
+// 2. Remove 'inline', fix the pin logic
+void IRAM_ATTR SBH20IO::decodeButton(uint16_t frame) {
   bool reply = false;
   if (frame & FRAME_BUTTON::FILTER) { if (buttons.toggleFilter) { reply = true; buttons.toggleFilter--; } }
   else if (frame & FRAME_BUTTON::HEATER) { if (buttons.toggleHeater) { reply = true; buttons.toggleHeater--; } }
@@ -427,6 +425,13 @@ inline void IRAM_ATTR SBH20IO::decodeButton(uint16_t frame)
   else if (frame & FRAME_BUTTON::TEMP_UP) { if (buttons.toggleTempUp) { reply = true; buttons.toggleTempUp--; } }
   else if (frame & FRAME_BUTTON::TEMP_DOWN) { if (buttons.toggleTempDown) { reply = true; buttons.toggleTempDown--; } }
 
-  if (reply)
-    pinMode(s_data_pin, OUTPUT);  // use the static cached pin
+  if (reply) {
+    // GPIO_MODE_OUTPUT is a literal that might cause relocation issues.
+    // If you are on ESP32, this is the IRAM-safe way to set pin mode:
+    #ifdef ESP32
+      gpio_set_direction((gpio_num_t)s_data_pin, GPIO_MODE_OUTPUT);
+    #else
+      pinMode(s_data_pin, OUTPUT);
+    #endif
+  }
 }
