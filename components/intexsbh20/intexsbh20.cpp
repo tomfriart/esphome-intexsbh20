@@ -1,6 +1,7 @@
 #include "intexsbh20.h"
 #include "SBHSwitch.h"
 #include "SBHClimate.h"
+#include "esphome/core/hal.h"
 
 namespace esphome {
 namespace sbh20 {
