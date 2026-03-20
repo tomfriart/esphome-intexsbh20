@@ -11,7 +11,13 @@ void IntexSBH20::setup()
   data_pin_->setup();
   clock_pin_->setup();
   enable_pin_->setup();
-  sbh_.setup(LANG::EN, data_pin_->get_pin_number(), clock_pin_->get_pin_number(), enable_pin_->get_pin_number());
+  //sbh_.setup(LANG::EN, data_pin_->get_pin_number(), clock_pin_->get_pin_number(), enable_pin_->get_pin_number());
+  sbh_.setup(
+  LANG::EN, 
+  ((esphome::InternalGPIOPin *)data_pin_)->get_pin(), 
+  ((esphome::InternalGPIOPin *)clock_pin_)->get_pin(), 
+  ((esphome::InternalGPIOPin *)enable_pin_)->get_pin()
+  );
 }
 
 // ... rest of the file unchanged
