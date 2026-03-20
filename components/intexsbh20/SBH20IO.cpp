@@ -357,6 +357,14 @@ void IRAM_ATTR SBH20IO::clockRisingISR(void *arg)
     frame = 0;
     receivedBits = 0;
   }
+  if (frame_complete) {
+    if (is_display_type) {
+        raw_display_frame = current_frame;
+    } else if (is_button_type) {
+        raw_button_frame = current_frame;
+    }
+    has_new_data = true;
+  }
 }
 
 inline uint8_t IRAM_ATTR SBH20IO::BCD(uint16_t value)
