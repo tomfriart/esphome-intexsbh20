@@ -412,45 +412,7 @@ inline void IRAM_ATTR SBH20IO::decodeDisplay(uint16_t frame)
   }
 }
 
-void IRAM_ATTR SBH20IO::clockRisingISR(void *arg)
-{
-  SBH20IO* self = static_cast<SBH20IO*>(arg);
-  static uint8_t s_data_pin = 0;
-  static uint8_t s_latch_pin = 0;
-  s_data_pin = self->pin_data_;
-  s_latch_pin = self->pin_latch_;
 
-  static uint16_t frame = 0x0000;
-  static uint16_t receivedBits = 0x0000;
-  bool data = !digitalRead(s_data_pin);
-  bool enable = digitalRead(s_latch_pin) == LOW;
-  static uint16_t pFrame = 0x000;
-  static int count = 0;
-
-  if (frame == pFrame)
-  {
-    count--;
-    if (count == 0)
-    {
-      if (state.ledStatus != frame)
-      {
-        state.ledStatus = frame;
-        state.buzzer = !(state.ledStatus & FRAME_LED::NO_BEEP);
-        state.stateUpdated = true;
-        if (state.buzzer)
-        {
-          buttons.toggleBubble = 0;
-          buttons.toggleFilter = 0;
-          buttons.toggleHeater = 0;
-          buttons.togglePower = 0;
-          buttons.toggleTempUp = 0;
-          buttons.toggleTempDown = 0;
-        }
-      }
-    }
-  }
-  else { pFrame = frame; count = 3; }
-}
 
 inline void IRAM_ATTR SBH20IO::decodeButton(uint16_t frame)
 {
