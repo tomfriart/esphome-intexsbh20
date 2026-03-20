@@ -120,10 +120,10 @@ private:
 private:
   static void IRAM_ATTR latchFallingISR(void *arg);
   static void IRAM_ATTR clockRisingISR(void *arg);
-  static inline uint8_t IRAM_ATTR BCD(uint16_t value);
-  static inline void IRAM_ATTR decodeDisplay(uint16_t frame);
-  static inline void IRAM_ATTR decodeLED(uint16_t frame);
-  static inline void IRAM_ATTR decodeButton(uint16_t frame);
+  static uint8_t IRAM_ATTR BCD(uint16_t value);
+  static void IRAM_ATTR decodeDisplay(uint16_t frame);
+  static void IRAM_ATTR decodeLED(uint16_t frame);
+  static void IRAM_ATTR decodeButton(uint16_t frame);
 
 private:
   static volatile State state;
