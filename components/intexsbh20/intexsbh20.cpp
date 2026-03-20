@@ -24,17 +24,6 @@ void IntexSBH20::setup()
 
 void IntexSBH20::loop()
 {
-	if (sbh_.has_new_data) {
-    sbh_.has_new_data = false; // Reset the flag
-    
-    // Now call the functions WITHOUT IRAM_ATTR
-    if (sbh_.raw_display_frame != 0) {
-        sbh_.decodeDisplay(sbh_.raw_display_frame);
-    }
-    if (sbh_.raw_button_frame != 0) {
-        sbh_.decodeButton(sbh_.raw_button_frame);
-    }
-  	}
 	sbh_.loop();
 }
 
