@@ -17,6 +17,10 @@
 static uint8_t s_data_pin = 0;
 static uint8_t s_latch_pin = 0;
 
+volatile uint16_t raw_display_frame = 0;
+volatile uint16_t raw_button_frame = 0;
+volatile bool has_new_data = false;
+
 namespace FRAME_LED
 {
   const uint16_t POWER = 0x0001;
@@ -379,7 +383,7 @@ inline uint8_t IRAM_ATTR SBH20IO::BCD(uint16_t value)
 }
 
 // 1. Remove 'inline', keep 'IRAM_ATTR'
-void IRAM_ATTR SBH20IO::decodeDisplay(uint16_t frame) {
+void SBH20IO::decodeDisplay(uint16_t frame) {
   static uint16_t value = 0;
   static uint16_t pValue = 0;
   static uint16_t stableValue = 0;
@@ -412,12 +416,12 @@ void IRAM_ATTR SBH20IO::decodeDisplay(uint16_t frame) {
   }
 }
 
-void IRAM_ATTR SBH20IO::decodeLED(uint16_t data) {
+void SBH20IO::decodeLED(uint16_t data) {
     // Stub
 }
 
 // 2. Remove 'inline', fix the pin logic
-void IRAM_ATTR SBH20IO::decodeButton(uint16_t frame) {
+void SBH20IO::decodeButton(uint16_t frame) {
   bool reply = false;
   if (frame & FRAME_BUTTON::FILTER) { if (buttons.toggleFilter) { reply = true; buttons.toggleFilter--; } }
   else if (frame & FRAME_BUTTON::HEATER) { if (buttons.toggleHeater) { reply = true; buttons.toggleHeater--; } }
