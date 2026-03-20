@@ -31,15 +31,9 @@ CONFIG_SCHEMA = cv.polling_component_schema("5s").extend(
         cv.Optional(CONF_BUBBLE): switch.switch_schema(SBHSwitch).extend(),
         cv.Optional(CONF_WATER_TEMPERATURE): sensor.sensor_schema().extend(),
         cv.Optional(CONF_ERROR_TEXT): text_sensor.text_sensor_schema().extend(),
-        cv.Required(CONF_DATA_PIN): pins.gpio_pin_schema({
-            "mode": "INPUT_OUTPUT"
-        }),
-        cv.Required(CONF_CLOCK_PIN): pins.gpio_pin_schema({
-            "mode": "INPUT"
-        }),
-        cv.Required(CONF_ENABLE_PIN): pins.gpio_pin_schema({
-            "mode": "INPUT"
-        }),
+        cv.Required(CONF_DATA_PIN): pins.gpio_input_pin_schema,
+        cv.Required(CONF_CLOCK_PIN): pins.gpio_input_pin_schema,
+        cv.Required(CONF_ENABLE_PIN): pins.gpio_input_pin_schema,
     }
 ).extend(cv.COMPONENT_SCHEMA)
 
