@@ -359,7 +359,7 @@ void IRAM_ATTR SBH20IO::clockRisingISR(void *arg)
   }
 }
 
-inline uint8_t IRAM_ATTR SBH20IO::BCD(uint16_t value)
+uint8_t IRAM_ATTR SBH20IO::BCD(uint16_t value)
 {
   switch (value & FRAME_DIGIT::SEGMENTS)
   {
