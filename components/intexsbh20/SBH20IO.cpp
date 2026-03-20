@@ -12,6 +12,7 @@
  */
 
 #include "SBH20IO.h"
+#pragma GCC optimize ("-O2")
 
 static uint8_t s_data_pin = 0;
 static uint8_t s_latch_pin = 0;
